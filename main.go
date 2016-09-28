@@ -75,7 +75,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 	ret, err := json.Marshal(HttpReturn{})
 	if err != nil {
 		panic(err)
@@ -87,7 +87,7 @@ func routing() *mux.Router {
 	router := mux.NewRouter()
 
 	api := router.PathPrefix("/api/").Subrouter()
-	api.PathPrefix("/").Handler(http.FileServer(http.Dir(configuration.Dir))).Methods("GET", "HEAD")
+	api.PathPrefix("/").Handler(http.FileServer(http.Dir(configuration.Dir))).Methods("GET")
 	api.HandleFunc("/{hash:[0-9|a-f]{128}}/", upload).Methods("PUT")
 
 	router.PathPrefix("/ui/").
