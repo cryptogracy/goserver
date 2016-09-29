@@ -12,17 +12,19 @@ const (
 	STATIC      = "ui"
 	DIR         = "cache"
 	TEMPDIR     = "tmp"
+	DATABASE    = "goserver.db"
 )
 
 type Configuration struct {
-	Address string `yaml:"adress"`
-	Static  string `yaml:"static"`
-	Dir     string `yaml:"dir"`
-	Tempdir string `yam:"tempdir"`
+	Address  string `yaml:"adress"`
+	Static   string `yaml:"static"`
+	Dir      string `yaml:"dir"`
+	Tempdir  string `yam:"tempdir"`
+	Database string `yam:"database"`
 }
 
 func readConfiguration() Configuration {
-	config := Configuration{ADDRESS, STATIC, DIR, TEMPDIR}
+	config := Configuration{ADDRESS, STATIC, DIR, TEMPDIR, DATABASE}
 	content, err := ioutil.ReadFile(CONFIG_FILE)
 	if err != nil {
 		log.Println("Cannot open configuration file:", err)

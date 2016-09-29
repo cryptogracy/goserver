@@ -4,12 +4,12 @@ import (
 	"crypto/sha512"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"path"
-	"github.com/gorilla/mux"
 )
 
 type HttpReturn struct {
@@ -17,6 +17,7 @@ type HttpReturn struct {
 }
 
 var configuration Configuration
+var db DB
 
 func upload(w http.ResponseWriter, r *http.Request) {
 	probableHash := mux.Vars(r)["hash"]
@@ -83,9 +84,12 @@ func upload(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	configuration = readConfiguration()
+	log.Println("Using database", configuration.Database)
 	log.Println("Static from", configuration.Address)
 	log.Println("Serving files from", configuration.Address)
 	log.Println("Listen on", configuration.Address)
+
+	db.Init()
 
 	log.Fatal(http.ListenAndServe(configuration.Address, routing()))
 }
