@@ -9,9 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-)
-
-import (
 	"github.com/gorilla/mux"
 )
 
@@ -81,26 +78,6 @@ func upload(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	w.Write(ret)
-}
-
-func routing() *mux.Router {
-	router := mux.NewRouter()
-
-	api := router.PathPrefix("/api/").Subrouter()
-	api.PathPrefix("/").Handler(http.FileServer(http.Dir(configuration.Dir))).Methods("GET")
-	api.HandleFunc("/{hash:[0-9|a-f]{128}}/", upload).Methods("PUT")
-
-	router.PathPrefix("/ui/").
-		Handler(http.StripPrefix("/ui/", http.FileServer(http.Dir("ui")))).
-		Methods("GET")
-
-	router.PathPrefix("/{hash:[0-9|a-f]{128}}/").
-		Handler(http.StripPrefix("/ui/", http.FileServer(http.Dir("ui")))).
-		Methods("GET")
-
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("ui"))).Methods("GET")
-
-	return router
 }
 
 func main() {
