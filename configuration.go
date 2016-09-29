@@ -11,7 +11,7 @@ const (
 	ADDRESS     = "127.0.0.1:8000"
 	STATIC      = "ui"
 	DIR         = "cache"
-	TEMPDIR     = "/tmp/cache"
+	TEMPDIR     = "tmp"
 )
 
 type Configuration struct {

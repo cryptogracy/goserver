@@ -5,9 +5,7 @@ set -e
 
 ADDRESS="http://localhost:8000"
 
-mkdir -p cache
-mkdir -p ui
-mkdir -p /tmp/cache
+mkdir -p cache ui tmp
 
 call_curl() {
   want=$1
