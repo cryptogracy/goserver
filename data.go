@@ -3,8 +3,8 @@ package main
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
+	"log"
 	"time"
-  "log"
 )
 
 type DB struct {
@@ -31,15 +31,15 @@ func (db *DB) Init() {
 			Death    TIMESTAMP NOT NULL,
 			Lifetime TIMESTAMP NOT NULL
 		)`)
-  stdErrCheck(err)
+	stdErrCheck(err)
 }
 
 func (db *DB) AddFile(entry FileEntry) {
 	_, err := db.db.Exec(
 		"INSERT INTO Files (Hash, Birth, Death, Lifetime) VALUES (?, ?, ?, ?)",
 		entry.Hash, entry.Birth, entry.Death, entry.Lifetime)
-  if err != nil {
-  log.Println(err)
-  }
+	if err != nil {
+		log.Println(err)
+	}
 	stdErrCheck(err)
 }
