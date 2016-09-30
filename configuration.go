@@ -31,8 +31,6 @@ func readConfiguration() Configuration {
 		return config
 	}
 	err = goyaml.Unmarshal(content, &config)
-	if err != nil {
-		log.Println("Cannot parse configuration file:", err)
-	}
+	errorLog("Cannot parse configuration file:", err)
 	return config
 }

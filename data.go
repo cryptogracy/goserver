@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"time"
@@ -16,12 +17,13 @@ type FileEntry struct {
 	Birth    time.Time
 	Death    time.Time
 	Lifetime time.Duration
+	Short    string
 }
 
 func (db *DB) Init() {
 	var err error
 	db.db, err = sql.Open("sqlite3", configuration.Database)
-	stdErrCheck(err)
+	errorPanic(err)
 
 	_, err = db.db.Exec(`
 		CREATE TABLE IF NOT EXISTS Files
@@ -29,17 +31,43 @@ func (db *DB) Init() {
 			Hash     STRING    PRIMARY KEY,
 			Birth    TIMESTAMP NOT NULL,
 			Death    TIMESTAMP NOT NULL,
-			Lifetime TIMESTAMP NOT NULL
+			Lifetime TIMESTAMP NOT NULL,
+			Short    STRING
 		)`)
-	stdErrCheck(err)
+	errorPanic(err)
 }
 
 func (db *DB) AddFile(entry FileEntry) {
 	_, err := db.db.Exec(
 		"INSERT INTO Files (Hash, Birth, Death, Lifetime) VALUES (?, ?, ?, ?)",
 		entry.Hash, entry.Birth, entry.Death, entry.Lifetime)
-	if err != nil {
-		log.Println(err)
+	errorPanic(err)
+}
+
+func (db *DB) RemoveOldFile() {
+	result, err := db.db.Exec(
+		"DELETE FROM Files WHERE death < $1", time.Now())
+	errorPanic(err)
+	affected, err := result.RowsAffected()
+	errorPanic(err)
+	log.Printf("Deleted %v old Files", affected)
+}
+
+func (db *DB) RemoveFilePeriod(period time.Duration) {
+	for true {
+		db.RemoveOldFile()
+		time.Sleep(period)
 	}
-	stdErrCheck(err)
+}
+
+func (db *DB) CheckPresence(hash string) bool {
+	var res string
+	err := db.db.QueryRow("SELECT Hash from Files WHERE Hash = $1", hash).Scan(&res)
+	fmt.Println(res)
+	if err == sql.ErrNoRows {
+		return false
+	} else if err != nil {
+		errorPanic(err)
+	}
+	return true
 }
