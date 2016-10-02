@@ -17,8 +17,8 @@ func main() {
 
 	configuration = readConfiguration()
 	log.Println("Using database", configuration.Database)
-	log.Println("Static from", configuration.Address)
-	log.Println("Serving files from", configuration.Address)
+	log.Println("Static from", configuration.Static)
+	log.Println("Serving files from", configuration.Dir)
 	log.Println("Listen on", configuration.Address)
 
 	db.Init()
