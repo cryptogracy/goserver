@@ -11,7 +11,7 @@ func routing() *mux.Router {
 	// Routes for API
 	api := router.PathPrefix("/api/").Subrouter()
 	api.PathPrefix("/").Handler(http.FileServer(http.Dir(configuration.Dir))).Methods("GET")
-	api.HandleFunc("/{hash:[0-9|a-f]{128}}/", upload).Methods("PUT").HeadersRegexp("x-http-lifespan", "[1-6]0")
+	api.HandleFunc("/{hash:[0-9|a-f]{128}}", upload).Methods("PUT").HeadersRegexp("x-http-lifespan", "[0-9]+")
 
 	// Routes for ui upload
 	router.PathPrefix("/ui/").
