@@ -16,7 +16,6 @@ type file interface {
 	io.Reader
 	io.ReaderAt
 	io.Seeker
-	Stat() (os.FileInfo, error)
 }
 
 // osFS implements fileSystem using the local disk.
