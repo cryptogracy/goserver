@@ -16,7 +16,7 @@ const (
 )
 
 type Configuration struct {
-	Address  string `yaml:"adress"`
+	Address  string `yaml:"address"`
 	Static   string `yaml:"static"`
 	Dir      string `yaml:"dir"`
 	Tempdir  string `yam:"tempdir"`
@@ -25,7 +25,15 @@ type Configuration struct {
 
 func readConfiguration() Configuration {
 	config := Configuration{ADDRESS, STATIC, DIR, TEMPDIR, DATABASE}
-	content, err := ioutil.ReadFile(CONFIG_FILE)
+
+	file, err := fs.Open(CONFIG_FILE)
+	if err != nil {
+		log.Println("Cannot open configuration file:", err)
+		return config
+	}
+	defer file.Close()
+
+	content, err := ioutil.ReadAll(file)
 	if err != nil {
 		log.Println("Cannot open configuration file:", err)
 		return config
