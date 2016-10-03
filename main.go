@@ -24,6 +24,7 @@ func main() {
 		log.Println(err)
 		panic(err)
 	}
+	defer data.Close()
 
 	go func() {
 		for true {
@@ -38,4 +39,5 @@ func main() {
 	}()
 
 	log.Fatal(http.ListenAndServe(configuration.Address, routing()))
+
 }

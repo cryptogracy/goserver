@@ -27,7 +27,7 @@ func routing() *mux.Router {
 	// Subrouter for /api/
 	api := router.PathPrefix("/api/").Subrouter()
 
-	api.Path("/").Handler(http.StripPrefix("/api/", http.FileServer(
+	api.PathPrefix("/").Handler(http.StripPrefix("/api/", http.FileServer(
 		http.Dir(configuration.Dir)))).Methods("GET")
 
 	// Put the file (with the lifespan in the header) to /api/<hash>

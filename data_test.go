@@ -20,18 +20,18 @@ func TestDBInit(t *testing.T) {
 
 /* I do not like this test, cause adding and checking are tested in the same
  * function...maybe both are broken */
-func TestAddandCheck(t *testing.T) {
+func TestAddFileandCheck(t *testing.T) {
 	db, _ := DBInit(":memory:")
 	defer db.Close()
 
 	// Test adding
-	if err := db.Add("Hash1", 10); err != nil {
+	if err := db.AddFile("Hash1", 10); err != nil {
 		t.Error(err)
 	}
-	if err := db.Add("Hash1", 2); err == nil {
+	if err := db.AddFile("Hash1", 2); err == nil {
 		t.Error(err)
 	}
-	if err := db.Add("Hash2", -5); err != nil {
+	if err := db.AddFile("Hash2", -5); err != nil {
 		t.Error(err)
 	}
 
@@ -51,10 +51,10 @@ func TestCleanup(t *testing.T) {
 	db, _ := DBInit(":memory:")
 	defer db.Close()
 
-	// Add some Data
-	db.Add("Hash1", 10)
-	db.Add("Hash2", 0)
-	db.Add("Hash3", -5)
+	// AddFile some Data
+	db.AddFile("Hash1", 10)
+	db.AddFile("Hash2", 0)
+	db.AddFile("Hash3", -5)
 
 	affected, err := db.Cleanup()
 

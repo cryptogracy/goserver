@@ -7,7 +7,8 @@ import (
 )
 
 type dataControl interface {
-	Add(hash string, lifespan int) error
+	AddFile(hash string, lifespan int) error
+  AddMeta(Id string, lifespan int) error
 	Cleanup() (int64, error)
 	Check(hash string) bool
 	Close() error
@@ -15,14 +16,6 @@ type dataControl interface {
 
 type DB struct {
 	db *sql.DB
-}
-
-type FileEntry struct {
-	Hash     string
-	Birth    time.Time
-	Death    time.Time
-	Lifetime time.Duration
-	Short    string
 }
 
 func DBInit(database string) (DB, error) {
@@ -36,24 +29,47 @@ func DBInit(database string) (DB, error) {
 		CREATE TABLE IF NOT EXISTS Files
 		(
 			Hash     STRING    PRIMARY KEY,
-			Birth    TIMESTAMP NOT NULL,
 			Death    TIMESTAMP NOT NULL,
-			Lifetime TIMESTAMP NOT NULL,
 			Short    STRING
+		)`)
+	if err != nil {
+		return DB{db}, err
+	}
+
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS Meta
+		(
+			Id    STRING PRIMARY KEY,
+			DEATH TIMESTAMP NOT NULL
 		)`)
 	return DB{db}, err
 }
 
 func (db DB) Close() error { return db.db.Close() }
 
-func (db DB) Add(hash string, lifespan int) error {
-	now := time.Now()
-	dur := time.Duration(lifespan) * time.Second
-	entry := FileEntry{hash, now, now.Add(dur), dur, ""}
+func (db DB) AddFile(hash string, lifespan int) error {
+	entry := struct {
+		Hash  string
+		Death time.Time
+		Short string
+	}{hash,
+		time.Now().Add(time.Duration(lifespan) * time.Second),
+		""}
 	_, err := db.db.Exec(
-		"INSERT INTO Files (Hash, Birth, Death, Lifetime) VALUES (?, ?, ?, ?)",
-		entry.Hash, entry.Birth, entry.Death, entry.Lifetime)
+    "INSERT INTO Files (Hash, Death, Short) VALUES (?, ?, ?)",
+		entry.Hash, entry.Death, entry.Short)
 	return err
+}
+
+func (db DB) AddMeta(id string, lifespan int) error {
+	entry := struct {
+		Id    string
+		Death time.Time
+	}{id, time.Now().Add(time.Duration(lifespan) * time.Second)}
+	_, err := db.db.Exec("INSERT INTO Files (Hash, Death) VALUES (?, ?)",
+		entry.Id, entry.Death)
+	return err
+
 }
 
 func (db DB) Cleanup() (int64, error) {

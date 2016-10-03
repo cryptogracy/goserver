@@ -86,7 +86,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	data.Add(hash, lifespan)
+	data.AddFile(hash, lifespan)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write(jsonAnswer(map[string]string{}))
