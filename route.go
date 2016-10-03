@@ -12,7 +12,7 @@ func routing() *mux.Router {
 	// Get upload ui from /
 	router.Path("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, path.Join(configuration.Static, "upload.html"))
-	}).		Methods("GET")
+	}).Methods("GET")
 
 	// Get download ui to download file with hash <hash> from /<hash>
 	router.Path("/{hash:[0-9|a-f]{128}}").HandlerFunc(
@@ -22,8 +22,7 @@ func routing() *mux.Router {
 
 	// Get all files from configuration.Static from /<configuration.Static>
 	router.PathPrefix(path.Join("/", configuration.Static)).
-		Handler(http.StripPrefix(path.Join("/", configuration.Static),
-		http.FileServer(http.Dir(configuration.Static)))).Methods("GET")
+		Handler(http.FileServer(http.Dir("."))).Methods("GET")
 
 	// Subrouter for /api/
 	api := router.PathPrefix("/api/").Subrouter()
