@@ -81,7 +81,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get lifespan
-	lifespan, err := strconv.Atoi(r.Header.Get("x-http-lifespan"))
+	lifespan, err := strconv.Atoi(r.Header.Get("x-file-lifespan"))
 	if err != nil {
 		panic(err)
 	}

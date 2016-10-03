@@ -33,7 +33,7 @@ func routing() *mux.Router {
 
 	// Put the file (with the lifespan in the header) to /api/<hash>
 	api.HandleFunc("/{hash:[0-9|a-f]{128}}", Upload).Methods("PUT").
-		HeadersRegexp("x-http-lifespan", "[0-9]+")
+		HeadersRegexp("x-file-lifespan", "[0-9]+")
 
 	// Push the metadata (with the lifespan in the header) to /api/metadata
 	api.HandleFunc("/metadata", func(w http.ResponseWriter, r *http.Request) {}).
