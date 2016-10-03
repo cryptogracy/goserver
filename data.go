@@ -10,7 +10,7 @@ import (
 type dataControl interface {
 	Add(hash string, lifespan int) error
 	Cleanup() error
-  Check(hash string) bool
+	Check(hash string) bool
 }
 
 type DB struct {

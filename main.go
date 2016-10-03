@@ -17,7 +17,7 @@ func main() {
 	log.Println("Serving files from", configuration.Dir)
 	log.Println("Listen on", configuration.Address)
 
-  var err error
+	var err error
 	data, err = DBInit()
 	if err != nil {
 		log.Println(err)
@@ -29,7 +29,7 @@ func main() {
 		if err != nil {
 			log.Println(err)
 		}
-    time.Sleep(1 * time.Minute)
+		time.Sleep(1 * time.Minute)
 	}()
 
 	log.Fatal(http.ListenAndServe(configuration.Address, routing()))
