@@ -10,7 +10,7 @@ type dataControl interface {
 	Add(hash string, lifespan int) error
 	Cleanup() (int64, error)
 	Check(hash string) bool
-  Close() error
+	Close() error
 }
 
 type DB struct {
@@ -44,7 +44,7 @@ func DBInit(database string) (DB, error) {
 	return DB{db}, err
 }
 
-func (db DB) Close () error { return db.db.Close() }
+func (db DB) Close() error { return db.db.Close() }
 
 func (db DB) Add(hash string, lifespan int) error {
 	now := time.Now()

@@ -24,31 +24,53 @@ func TestAddandCheck(t *testing.T) {
 	db, _ := DBInit(":memory:")
 	defer db.Close()
 
-  // Test adding
-	if err := db.Add("Hash1", 10); err != nil { t.Error(err)}
-	if err := db.Add("Hash1", 2); err == nil { t.Error(err)}
-	if err := db.Add("Hash2", -5); err != nil { t.Error(err)}
+	// Test adding
+	if err := db.Add("Hash1", 10); err != nil {
+		t.Error(err)
+	}
+	if err := db.Add("Hash1", 2); err == nil {
+		t.Error(err)
+	}
+	if err := db.Add("Hash2", -5); err != nil {
+		t.Error(err)
+	}
 
-  // Test checking and proof if adding has worked.
-  if !db.Check("Hash1") { t.Error("Hash1 not present")}
-  if !db.Check("Hash2") { t.Error("Hash2 not present")}
-  if db.Check("Hash3") { t.Error("Hash3 present")}
+	// Test checking and proof if adding has worked.
+	if !db.Check("Hash1") {
+		t.Error("Hash1 not present")
+	}
+	if !db.Check("Hash2") {
+		t.Error("Hash2 not present")
+	}
+	if db.Check("Hash3") {
+		t.Error("Hash3 present")
+	}
 }
 
 func TestCleanup(t *testing.T) {
 	db, _ := DBInit(":memory:")
 	defer db.Close()
 
-  // Add some Data
+	// Add some Data
 	db.Add("Hash1", 10)
 	db.Add("Hash2", 0)
 	db.Add("Hash3", -5)
 
-  affected, err := db.Cleanup()
+	affected, err := db.Cleanup()
 
-  if err != nil { t.Error(err) }
-  if affected != 2 { t.Error("Wrong number of deleted Rows") }
-  if !db.Check("Hash1") { t.Error("Hash1 not present")}
-  if db.Check("Hash2") { t.Error("Hash2 present")}
-  if db.Check("Hash3") { t.Error("Hash3 present")}
+	if err != nil {
+		t.Error(err)
+	}
+	if affected != 2 {
+		t.Error("Wrong number of deleted Rows")
+	}
+	if !db.Check("Hash1") {
+		t.Error("Hash1 not present")
+	}
+	if db.Check("Hash2") {
+		t.Error("Hash2 present")
+	}
+	if db.Check("Hash3") {
+		t.Error("Hash3 present")
+	}
 }
