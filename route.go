@@ -35,7 +35,7 @@ func routing() *mux.Router {
 		HeadersRegexp("x-file-lifespan", "[0-9]+")
 
 	// Push the metadata (with the lifespan in the header) to /api/metadata
-	api.HandleFunc("/metadata", func(w http.ResponseWriter, r *http.Request) {}).
+	api.HandleFunc("/metadata", PushMeta).
 		Methods("PUSH")
 
 	// Get the metadata with the <id> from /api/metadata/<id>
