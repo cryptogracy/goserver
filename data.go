@@ -8,7 +8,7 @@ import (
 
 type dataControl interface {
 	AddFile(hash string, lifespan int) error
-  AddMeta(Id string, lifespan int) error
+	AddMeta(Id string, lifespan int) error
 	Cleanup() (int64, error)
 	Check(hash string) bool
 	Close() error
@@ -56,7 +56,7 @@ func (db DB) AddFile(hash string, lifespan int) error {
 		time.Now().Add(time.Duration(lifespan) * time.Second),
 		""}
 	_, err := db.db.Exec(
-    "INSERT INTO Files (Hash, Death, Short) VALUES (?, ?, ?)",
+		"INSERT INTO Files (Hash, Death, Short) VALUES (?, ?, ?)",
 		entry.Hash, entry.Death, entry.Short)
 	return err
 }
