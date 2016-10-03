@@ -10,69 +10,74 @@ import (
 	"os"
 	"path"
 	"strconv"
-	"time"
 )
 
-func upload(w http.ResponseWriter, r *http.Request) {
-	probableHash := mux.Vars(r)["hash"]
+type HttpReturn struct {
+	Error string
+}
 
-	if db.CheckPresence(probableHash) {
-		w.Header().Set("Content-Type", "application/json")
+func jsonAnswer(answer map[string]string) []byte {
+	json, err := json.Marshal(answer)
+	errorPanic(err)
+	return json
+}
+
+func isHash(hash string, file io.Reader) bool {
+	hasher := sha512.New()
+	_, err := io.Copy(hasher, file)
+	errorPanic(err)
+	if fmt.Sprintf("%x", hasher.Sum(nil)) == hash {
+		return true
+	}
+	return false
+}
+
+func Upload(w http.ResponseWriter, r *http.Request) {
+	hash := mux.Vars(r)["hash"]
+	w.Header().Set("Content-Type", "application/json") // We always return json
+
+	// File is already uploaded
+	if db.CheckPresence(hash) {
 		w.WriteHeader(http.StatusConflict)
-		ret, err := json.Marshal(HttpReturn{"File already uploaded"})
-		errorPanic(err)
-		w.Write(ret)
+		w.Write(jsonAnswer(map[string]string{"Error": "File already uploaded"}))
 		return
 	}
 
-	lifespan, err := strconv.Atoi(r.Header.Get("x-http-lifespan"))
-	errorPanic(err)
-
-	tempfile := path.Join(configuration.Tempdir, probableHash)
-
+	// Open file
+	tempfile := path.Join(configuration.Tempdir, hash)
 	out, err := os.OpenFile(tempfile, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
 
+	// Upload in Progress
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusConflict)
-		ret, err := json.Marshal(HttpReturn{"Upload in Progress"})
-		errorPanic(err)
-		w.Write(ret)
+		w.Write(jsonAnswer(map[string]string{"Error": "Upload in Progress"}))
 		return
 	}
 	defer out.Close()
-	defer os.Remove(tempfile)
+	defer os.Remove(tempfile) // We never want to keep the tmpfile
 
+	// Copy to tmp
 	_, err = io.Copy(out, r.Body)
 	errorPanic(err)
 
 	// Check Hash
-	hasher := sha512.New()
 	_, err = out.Seek(0, os.SEEK_SET)
-	errorPanic(err)
-	_, err = io.Copy(hasher, out)
-	errorPanic(err)
-
-	generatedHash := fmt.Sprintf("%x", hasher.Sum(nil))
-	if probableHash != generatedHash {
-		w.Header().Set("Content-Type", "application/json")
+	if !isHash(hash, out) {
 		w.WriteHeader(http.StatusBadRequest)
-		ret, err := json.Marshal(HttpReturn{"Wrong hash"})
-		errorPanic(err)
-		w.Write(ret)
+		w.Write(jsonAnswer(map[string]string{"Error": "Wrong hash"}))
 		return
 	}
 
-	err = os.Rename(tempfile, path.Join(configuration.Dir, generatedHash))
-
-	now := time.Now()
-	dur := time.Duration(lifespan) * time.Second
-	db.AddFile(FileEntry{generatedHash, now, now.Add(dur), dur, ""})
-
+	// Put into configuration Dir
+	err = os.Rename(tempfile, path.Join(configuration.Dir, hash))
 	errorPanic(err)
-	w.Header().Set("Content-Type", "application/json")
+
+	// Get lifespan
+	lifespan, err := strconv.Atoi(r.Header.Get("x-http-lifespan"))
+	errorPanic(err)
+
+	db.AddFile(hash, lifespan)
+
 	w.WriteHeader(http.StatusCreated)
-	ret, err := json.Marshal(HttpReturn{})
-	errorPanic(err)
-	w.Write(ret)
+	w.Write(jsonAnswer(map[string]string{}))
 }

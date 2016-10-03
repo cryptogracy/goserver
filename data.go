@@ -37,7 +37,13 @@ func (db *DB) Init() {
 	errorPanic(err)
 }
 
-func (db *DB) AddFile(entry FileEntry) {
+func (db *DB) AddFile(hash string, lifespan int) {
+	now := time.Now()
+	dur := time.Duration(lifespan) * time.Second
+	db.addFile(FileEntry{hash, now, now.Add(dur), dur, ""})
+}
+
+func (db *DB) addFile(entry FileEntry) {
 	_, err := db.db.Exec(
 		"INSERT INTO Files (Hash, Birth, Death, Lifetime) VALUES (?, ?, ?, ?)",
 		entry.Hash, entry.Birth, entry.Death, entry.Lifetime)

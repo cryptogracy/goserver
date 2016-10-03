@@ -6,10 +6,6 @@ import (
 	"time"
 )
 
-type HttpReturn struct {
-	Error string
-}
-
 var configuration Configuration
 var db DB
 

@@ -6,7 +6,6 @@ import (
 	"testing"
 )
 
-
 type fakeFileSystem struct {
 	content string
 }
@@ -15,7 +14,6 @@ func (ffs fakeFileSystem) Open(name string) (file, error) {
 	reader := strings.NewReader(ffs.content)
 	return fakeFile{reader, nil, nil}, nil
 }
-
 
 type fakeFile struct {
 	reader io.Reader
@@ -30,7 +28,6 @@ func (ff fakeFile) Read(b []byte) (n int, err error) {
 func (ff fakeFile) Close() error {
 	return nil
 }
-
 
 func TestReadConfiguationDefault(t *testing.T) {
 	fs = fakeFileSystem{}
@@ -51,7 +48,6 @@ func TestReadConfiguationDefault(t *testing.T) {
 		t.Error("Address does not match")
 	}
 }
-
 
 func TestReadConfiguationSet(t *testing.T) {
 	fs = fakeFileSystem{`
