@@ -8,6 +8,7 @@ import (
 
 var configuration Configuration
 var data dataControl
+var fs fileSystem = osFS{}
 
 func main() {
 
