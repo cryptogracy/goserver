@@ -2,11 +2,16 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"time"
 )
+
+type dataControl interface {
+	Add(hash string, lifespan int) error
+	Cleanup() error
+  Check(hash string) bool
+}
 
 type DB struct {
 	db *sql.DB
@@ -20,12 +25,14 @@ type FileEntry struct {
 	Short    string
 }
 
-func (db *DB) Init() {
-	var err error
-	db.db, err = sql.Open("sqlite3", configuration.Database)
-	errorPanic(err)
+func DBInit() (DB, error) {
+	db, err := sql.Open("sqlite3", configuration.Database)
+	ret := DB{db}
+	if err != nil {
+		return ret, err
+	}
 
-	_, err = db.db.Exec(`
+	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS Files
 		(
 			Hash     STRING    PRIMARY KEY,
@@ -34,42 +41,36 @@ func (db *DB) Init() {
 			Lifetime TIMESTAMP NOT NULL,
 			Short    STRING
 		)`)
-	errorPanic(err)
+	return DB{db}, err
 }
 
-func (db *DB) AddFile(hash string, lifespan int) {
+func (db DB) Add(hash string, lifespan int) error {
 	now := time.Now()
 	dur := time.Duration(lifespan) * time.Second
-	db.addFile(FileEntry{hash, now, now.Add(dur), dur, ""})
-}
-
-func (db *DB) addFile(entry FileEntry) {
+	entry := FileEntry{hash, now, now.Add(dur), dur, ""}
 	_, err := db.db.Exec(
 		"INSERT INTO Files (Hash, Birth, Death, Lifetime) VALUES (?, ?, ?, ?)",
 		entry.Hash, entry.Birth, entry.Death, entry.Lifetime)
-	errorPanic(err)
+	return err
 }
 
-func (db *DB) RemoveOldFile() {
+func (db DB) Cleanup() error {
 	result, err := db.db.Exec(
 		"DELETE FROM Files WHERE death < $1", time.Now())
-	errorPanic(err)
-	affected, err := result.RowsAffected()
-	errorPanic(err)
-	log.Printf("Deleted %v old Files", affected)
-}
-
-func (db *DB) RemoveFilePeriod(period time.Duration) {
-	for true {
-		db.RemoveOldFile()
-		time.Sleep(period)
+	if err != nil {
+		return err
 	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	log.Printf("Deleted %v old Files", affected)
+	return nil
 }
 
-func (db *DB) CheckPresence(hash string) bool {
+func (db DB) Check(hash string) bool {
 	var res string
 	err := db.db.QueryRow("SELECT Hash from Files WHERE Hash = $1", hash).Scan(&res)
-	fmt.Println(res)
 	if err == sql.ErrNoRows {
 		return false
 	} else if err != nil {

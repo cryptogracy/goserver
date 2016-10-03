@@ -37,7 +37,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json") // We always return json
 
 	// File is already uploaded
-	if db.CheckPresence(hash) {
+	if data.Check(hash) {
 		w.WriteHeader(http.StatusConflict)
 		w.Write(jsonAnswer(map[string]string{"Error": "File already uploaded"}))
 		return
@@ -76,7 +76,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	lifespan, err := strconv.Atoi(r.Header.Get("x-http-lifespan"))
 	errorPanic(err)
 
-	db.AddFile(hash, lifespan)
+	data.Add(hash, lifespan)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write(jsonAnswer(map[string]string{}))
