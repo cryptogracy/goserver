@@ -15,7 +15,7 @@ func main() {
 	log.Println("Using database", configuration.Database)
 	log.Println("Static from", configuration.Static)
 	log.Println("Serving files from", configuration.Dir)
-	log.Println("Listen on", configuration.Address)
+	log.Println("Listening on http://" + configuration.Address)
 
 	var err error
 	data, err = DBInit(configuration.Database)
