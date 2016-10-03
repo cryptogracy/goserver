@@ -25,8 +25,8 @@ type FileEntry struct {
 	Short    string
 }
 
-func DBInit() (DB, error) {
-	db, err := sql.Open("sqlite3", configuration.Database)
+func DBInit(database string) (DB, error) {
+	db, err := sql.Open("sqlite3", database)
 	ret := DB{db}
 	if err != nil {
 		return ret, err

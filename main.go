@@ -18,18 +18,20 @@ func main() {
 	log.Println("Listen on", configuration.Address)
 
 	var err error
-	data, err = DBInit()
+	data, err = DBInit(configuration.Database)
 	if err != nil {
 		log.Println(err)
 		panic(err)
 	}
 
 	go func() {
-		err := data.Cleanup()
-		if err != nil {
-			log.Println(err)
+		for true {
+			err := data.Cleanup()
+			if err != nil {
+				log.Println(err)
+			}
+			time.Sleep(1 * time.Minute)
 		}
-		time.Sleep(1 * time.Minute)
 	}()
 
 	log.Fatal(http.ListenAndServe(configuration.Address, routing()))
