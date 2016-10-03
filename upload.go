@@ -18,14 +18,18 @@ type HttpReturn struct {
 
 func jsonAnswer(answer map[string]string) []byte {
 	json, err := json.Marshal(answer)
-	errorPanic(err)
+	if err != nil {
+		panic(err)
+	}
 	return json
 }
 
 func isHash(hash string, file io.Reader) bool {
 	hasher := sha512.New()
 	_, err := io.Copy(hasher, file)
-	errorPanic(err)
+	if err != nil {
+		panic(err)
+	}
 	if fmt.Sprintf("%x", hasher.Sum(nil)) == hash {
 		return true
 	}
@@ -58,7 +62,9 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 
 	// Copy to tmp
 	_, err = io.Copy(out, r.Body)
-	errorPanic(err)
+	if err != nil {
+		panic(err)
+	}
 
 	// Check Hash
 	_, err = out.Seek(0, os.SEEK_SET)
@@ -70,11 +76,15 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 
 	// Put into configuration Dir
 	err = os.Rename(tempfile, path.Join(configuration.Dir, hash))
-	errorPanic(err)
+	if err != nil {
+		panic(err)
+	}
 
 	// Get lifespan
 	lifespan, err := strconv.Atoi(r.Header.Get("x-http-lifespan"))
-	errorPanic(err)
+	if err != nil {
+		panic(err)
+	}
 
 	data.Add(hash, lifespan)
 

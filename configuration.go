@@ -39,6 +39,8 @@ func readConfiguration() Configuration {
 		return config
 	}
 	err = goyaml.Unmarshal(content, &config)
-	errorPanic(err)
+	if err != nil {
+		panic(err)
+	}
 	return config
 }

@@ -74,7 +74,7 @@ func (db DB) Check(hash string) bool {
 	if err == sql.ErrNoRows {
 		return false
 	} else if err != nil {
-		errorPanic(err)
+		panic(err)
 	}
 	return true
 }
