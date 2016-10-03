@@ -3,14 +3,14 @@ package main
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	"log"
 	"time"
 )
 
 type dataControl interface {
 	Add(hash string, lifespan int) error
-	Cleanup() error
+	Cleanup() (int64, error)
 	Check(hash string) bool
+  Close() error
 }
 
 type DB struct {
@@ -44,6 +44,8 @@ func DBInit(database string) (DB, error) {
 	return DB{db}, err
 }
 
+func (db DB) Close () error { return db.db.Close() }
+
 func (db DB) Add(hash string, lifespan int) error {
 	now := time.Now()
 	dur := time.Duration(lifespan) * time.Second
@@ -54,24 +56,22 @@ func (db DB) Add(hash string, lifespan int) error {
 	return err
 }
 
-func (db DB) Cleanup() error {
+func (db DB) Cleanup() (int64, error) {
 	result, err := db.db.Exec(
 		"DELETE FROM Files WHERE death < $1", time.Now())
 	if err != nil {
-		return err
+		return 0, err
 	}
 	affected, err := result.RowsAffected()
 	if err != nil {
-		return err
+		return 0, err
 	}
-	log.Printf("Deleted %v old Files", affected)
-	return nil
+	return affected, nil
 }
 
 func (db DB) Check(hash string) bool {
 	var res string
-	err := db.db.QueryRow("SELECT Hash from Files WHERE Hash = $1", hash).Scan(&res)
-	if err == sql.ErrNoRows {
+	if err := db.db.QueryRow("SELECT Hash from Files WHERE Hash = $1", hash).Scan(&res); err == sql.ErrNoRows {
 		return false
 	} else if err != nil {
 		panic(err)

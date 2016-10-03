@@ -26,8 +26,10 @@ func main() {
 
 	go func() {
 		for true {
-			err := data.Cleanup()
-			if err != nil {
+			affected, err := data.Cleanup()
+			if err == nil {
+				log.Printf("Deleted %v old Files\n", affected)
+			} else {
 				log.Println(err)
 			}
 			time.Sleep(1 * time.Minute)
