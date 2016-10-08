@@ -75,7 +75,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Put into configuration Dir
-	err = os.Rename(tempfile, path.Join(configuration.Dir, hash))
+	err = os.Rename(tempfile, path.Join(configuration.Dir, "files", hash))
 	if err != nil {
 		panic(err)
 	}
