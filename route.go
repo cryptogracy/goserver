@@ -11,7 +11,7 @@ func routing() *mux.Router {
 
 	ui(router)
 
-  static(router)
+	static(router)
 
 	// Put the file (with the lifespan in the header) to /api/<hash>
 	router.HandleFunc("/api/files/{hash:[0-9|a-f]{128}}", Upload).Methods("PUT").
@@ -38,7 +38,7 @@ func static(router *mux.Router) {
 		http.FileServer(http.Dir(configuration.Static))))
 
 	// Get all files from configuration.Static from /ui/
-  router.PathPrefix("/api/").Methods("GET").Handler(http.StripPrefix("/api/",
+	router.PathPrefix("/api/").Methods("GET").Handler(http.StripPrefix("/api/",
 		http.FileServer(http.Dir(configuration.Dir))))
 }
 
