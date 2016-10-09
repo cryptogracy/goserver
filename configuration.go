@@ -1,8 +1,8 @@
 package main
 
 import (
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"launchpad.net/goyaml"
 	"log"
 )
 
@@ -38,7 +38,7 @@ func readConfiguration() Configuration {
 		log.Println("Cannot open configuration file:", err)
 		return config
 	}
-	err = goyaml.Unmarshal(content, &config)
+	err = yaml.Unmarshal(content, &config)
 	if err != nil {
 		panic(err)
 	}
