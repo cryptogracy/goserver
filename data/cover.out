@@ -1,0 +1,17 @@
+mode: set
+github.com/cryptogracy/goserver/data/data.go:29.40,35.16 5 1
+github.com/cryptogracy/goserver/data/data.go:39.2,43.16 3 1
+github.com/cryptogracy/goserver/data/data.go:35.16,37.3 1 0
+github.com/cryptogracy/goserver/data/data.go:46.28,48.2 1 1
+github.com/cryptogracy/goserver/data/data.go:50.54,57.27 5 1
+github.com/cryptogracy/goserver/data/data.go:60.2,60.13 1 1
+github.com/cryptogracy/goserver/data/data.go:57.27,59.3 1 1
+github.com/cryptogracy/goserver/data/data.go:63.39,66.2 2 1
+github.com/cryptogracy/goserver/data/data.go:68.68,73.34 4 1
+github.com/cryptogracy/goserver/data/data.go:77.2,80.31 3 1
+github.com/cryptogracy/goserver/data/data.go:83.2,83.20 1 1
+github.com/cryptogracy/goserver/data/data.go:73.34,75.3 1 1
+github.com/cryptogracy/goserver/data/data.go:80.31,82.3 1 0
+github.com/cryptogracy/goserver/data/data.go:88.28,90.19 2 1
+github.com/cryptogracy/goserver/data/data.go:93.2,93.18 1 1
+github.com/cryptogracy/goserver/data/data.go:90.19,92.3 1 1
