@@ -10,10 +10,60 @@ import (
 	"os"
 	"path"
 	"strconv"
+  "github.com/cryptogracy/goserver/db"
 )
 
-type HttpReturn struct {
-	Error string
+func Upload(w http.ResponseWriter, r *http.Request) {
+	hash := mux.Vars(r)["hash"]
+	w.Header().Set("Content-Type", "application/json") // We always return json
+
+	// Get lifespan
+	lifespan, err := strconv.Atoi(r.Header.Get("x-file-lifespan"))
+	if err != nil {
+		panic(err)
+	}
+
+	// Open file
+	tempfile := path.Join(configuration.Tempdir, hash)
+	out, err := os.OpenFile(tempfile, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
+	// File exists, so upload in progress
+	if err != nil {
+		w.WriteHeader(http.StatusConflict)
+		w.Write(jsonAnswer(map[string]string{"Error": "Upload in Progress"}))
+		return
+	}
+	defer out.Close()
+	defer os.Remove(tempfile) // We never want to keep the tmpfile
+
+	// Copy content to tmp
+	if _, err := io.Copy(out, r.Body); err != nil {
+		panic(err)
+	}
+
+	// Check if the hash is correct
+	if _, err := out.Seek(0, os.SEEK_SET); err != nil {
+    panic(err)
+  }
+	if !isHash(hash, out) {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsonAnswer(map[string]string{"Error": "Wrong hash"}))
+		return
+	}
+
+	// File is already uploaded
+	if !db.AddFile(hash, lifespan) {
+		w.WriteHeader(http.StatusConflict)
+		w.Write(jsonAnswer(map[string]string{"Error": "File already uploaded"}))
+		return
+	}
+
+	// Put into configuration Dir
+	if err := os.Rename(tempfile, path.Join(configuration.Dir, "files", hash)); err != nil {
+		panic(err)
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write(jsonAnswer(map[string]string{}))
 }
 
 func jsonAnswer(answer map[string]string) []byte {
@@ -34,60 +84,4 @@ func isHash(hash string, file io.Reader) bool {
 		return true
 	}
 	return false
-}
-
-func Upload(w http.ResponseWriter, r *http.Request) {
-	hash := mux.Vars(r)["hash"]
-	w.Header().Set("Content-Type", "application/json") // We always return json
-
-	// File is already uploaded
-	if data.Check(hash) {
-		w.WriteHeader(http.StatusConflict)
-		w.Write(jsonAnswer(map[string]string{"Error": "File already uploaded"}))
-		return
-	}
-
-	// Open file
-	tempfile := path.Join(configuration.Tempdir, hash)
-	out, err := os.OpenFile(tempfile, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
-
-	// Upload in Progress
-	if err != nil {
-		w.WriteHeader(http.StatusConflict)
-		w.Write(jsonAnswer(map[string]string{"Error": "Upload in Progress"}))
-		return
-	}
-	defer out.Close()
-	defer os.Remove(tempfile) // We never want to keep the tmpfile
-
-	// Copy to tmp
-	_, err = io.Copy(out, r.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	// Check Hash
-	_, err = out.Seek(0, os.SEEK_SET)
-	if !isHash(hash, out) {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(jsonAnswer(map[string]string{"Error": "Wrong hash"}))
-		return
-	}
-
-	// Put into configuration Dir
-	err = os.Rename(tempfile, path.Join(configuration.Dir, "files", hash))
-	if err != nil {
-		panic(err)
-	}
-
-	// Get lifespan
-	lifespan, err := strconv.Atoi(r.Header.Get("x-file-lifespan"))
-	if err != nil {
-		panic(err)
-	}
-
-	data.AddFile(hash, lifespan)
-
-	w.WriteHeader(http.StatusCreated)
-	w.Write(jsonAnswer(map[string]string{}))
 }

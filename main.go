@@ -4,10 +4,10 @@ import (
 	"log"
 	"net/http"
 	"time"
+  "github.com/cryptogracy/goserver/db"
 )
 
 var configuration Configuration
-var data dataControl
 var fs fileSystem = osFS{}
 
 func main() {
@@ -19,16 +19,15 @@ func main() {
 	log.Println("Listening on http://" + configuration.Address)
 
 	var err error
-	data, err = DBInit(configuration.Database)
-	if err != nil {
+	if err = db.Init(configuration.Database); err != nil {
 		log.Println(err)
 		panic(err)
-	}
-	defer data.Close()
+  }
+	defer db.Close()
 
 	go func() {
 		for true {
-			affected, err := data.Cleanup()
+			affected, err := db.Cleanup()
 			if err == nil {
 				log.Printf("Deleted %v old Files\n", affected)
 			} else {
