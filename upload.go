@@ -27,10 +27,12 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	tempfile := path.Join(configuration.Tempdir, hash)
 	out, err := os.OpenFile(tempfile, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
 	// File exists, so upload in progress
-	if err != nil {
+	if os.IsExist(err) {
 		w.WriteHeader(http.StatusConflict)
 		w.Write(jsonAnswer(map[string]string{"Error": "Upload in Progress"}))
 		return
+	} else if err != nil {
+		panic(err)
 	}
 	defer out.Close()
 	defer os.Remove(tempfile) // We never want to keep the tmpfile
