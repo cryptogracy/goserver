@@ -4,13 +4,13 @@ import (
 	"crypto/sha512"
 	"encoding/json"
 	"fmt"
+	"github.com/cryptogracy/goserver/db"
 	"github.com/gorilla/mux"
 	"io"
 	"net/http"
 	"os"
 	"path"
 	"strconv"
-  "github.com/cryptogracy/goserver/db"
 )
 
 func Upload(w http.ResponseWriter, r *http.Request) {
@@ -44,8 +44,8 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the hash is correct
 	if _, err := out.Seek(0, os.SEEK_SET); err != nil {
-    panic(err)
-  }
+		panic(err)
+	}
 	if !isHash(hash, out) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(jsonAnswer(map[string]string{"Error": "Wrong hash"}))
@@ -60,7 +60,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Put into configuration Dir
-	if err := os.Rename(tempfile, path.Join(configuration.Dir, "files", hash)); err != nil {
+	if err := os.Rename(tempfile, path.Join(configuration.Dir, hash)); err != nil {
 		panic(err)
 	}
 

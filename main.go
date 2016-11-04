@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/cryptogracy/goserver/db"
 	"log"
 	"net/http"
 	"time"
-  "github.com/cryptogracy/goserver/db"
 )
 
 var configuration Configuration
@@ -22,7 +22,7 @@ func main() {
 	if err = db.Init(configuration.Database); err != nil {
 		log.Println(err)
 		panic(err)
-  }
+	}
 	defer db.Close()
 
 	go func() {
@@ -37,6 +37,6 @@ func main() {
 		}
 	}()
 
-	log.Fatal(http.ListenAndServe(configuration.Address, routing()))
+	log.Fatal(http.ListenAndServe(configuration.Address, newRouter()))
 
 }
