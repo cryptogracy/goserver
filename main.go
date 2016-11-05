@@ -1,25 +1,25 @@
 package main
 
 import (
-	"github.com/cryptogracy/goserver/db"
 	"log"
 	"net/http"
 	"time"
-)
 
-var configuration Configuration
-var fs fileSystem = osFS{}
+	"github.com/cryptogracy/goserver/db"
+	"github.com/cryptogracy/goserver/configuration"
+	"github.com/cryptogracy/goserver/routing"
+)
 
 func main() {
 
-	configuration = readConfiguration()
-	log.Println("Using database", configuration.Database)
-	log.Println("Static from", configuration.Static)
-	log.Println("Serving files from", configuration.Dir)
-	log.Println("Listening on http://" + configuration.Address)
+	configuration.Init()
+	log.Println("Using database", configuration.Config.Database)
+	log.Println("Static from", configuration.Config.Static)
+	log.Println("Serving files from", configuration.Config.Dir)
+	log.Println("Listening on http://" + configuration.Config.Address)
 
 	var err error
-	if err = db.Init(configuration.Database); err != nil {
+	if err = db.Init(configuration.Config.Database); err != nil {
 		log.Println(err)
 		panic(err)
 	}
@@ -37,6 +37,6 @@ func main() {
 		}
 	}()
 
-	log.Fatal(http.ListenAndServe(configuration.Address, newRouter()))
+	log.Fatal(http.ListenAndServe(configuration.Config.Address, routing.Router()))
 
 }
