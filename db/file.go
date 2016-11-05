@@ -15,7 +15,7 @@ type File struct {
 }
 
 func AddFile(hash string, lifespan int) bool {
-	death := time.Now().Add(time.Duration(lifespan) * time.Second)
+	death := time.Now().Add(time.Duration(lifespan) * time.Minute)
 	short := ""
 
 	file := File{Hash: hash, Death: death, Short: short}
