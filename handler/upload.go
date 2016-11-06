@@ -1,18 +1,13 @@
 package handler
 
 import (
-	"crypto/sha512"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
-	"io"
+	"log"
 	"net/http"
-	"os"
-	"path"
 	"strconv"
 
 	"github.com/cryptogracy/goserver/db"
-	"github.com/cryptogracy/goserver/configuration"
 )
 
 func Upload() http.Handler { return http.HandlerFunc(uploadFunc) }
@@ -27,45 +22,22 @@ func uploadFunc(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	// Open file
-	tempfile := path.Join(configuration.Config.Tempdir, hash)
-	out, err := os.OpenFile(tempfile, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
-	// File exists, so upload in progress
-	if os.IsExist(err) {
-		w.WriteHeader(http.StatusConflict)
-		w.Write(jsonAnswer(map[string]string{"Error": "Upload in Progress"}))
-		return
-	} else if err != nil {
-		panic(err)
-	}
-	defer out.Close()
-	defer os.Remove(tempfile) // We never want to keep the tmpfile
-
-	// Copy content to tmp
-	if _, err := io.Copy(out, r.Body); err != nil {
-		panic(err)
-	}
-
-	// Check if the hash is correct
-	if _, err := out.Seek(0, os.SEEK_SET); err != nil {
-		panic(err)
-	}
-	if !isHash(hash, out) {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(jsonAnswer(map[string]string{"Error": "Wrong hash"}))
-		return
-	}
-
 	// File is already uploaded
-	if !db.AddFile(hash, lifespan) {
-		w.WriteHeader(http.StatusConflict)
-		w.Write(jsonAnswer(map[string]string{"Error": "File already uploaded"}))
-		return
-	}
-
-	// Put into configuration Dir
-	if err := os.Rename(tempfile, path.Join(configuration.Config.Dir, hash)); err != nil {
-		panic(err)
+	if err := db.AddFile(hash, lifespan, r.Body); err != nil {
+		log.Println(err)
+		if err == db.ErrFileExist {
+			w.WriteHeader(http.StatusConflict)
+			w.Write(jsonAnswer(map[string]string{"Error": "File already uploaded"}))
+			return
+		} else if err == db.ErrHash {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(jsonAnswer(map[string]string{"Error": "Wrong Hash"}))
+			return
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(jsonAnswer(map[string]string{"Error": "Internal Error"}))
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusCreated)
@@ -78,16 +50,4 @@ func jsonAnswer(answer map[string]string) []byte {
 		panic(err)
 	}
 	return json
-}
-
-func isHash(hash string, file io.Reader) bool {
-	hasher := sha512.New()
-	_, err := io.Copy(hasher, file)
-	if err != nil {
-		panic(err)
-	}
-	if fmt.Sprintf("%x", hasher.Sum(nil)) == hash {
-		return true
-	}
-	return false
 }

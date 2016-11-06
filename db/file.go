@@ -1,28 +1,90 @@
 package db
 
 import (
+	"crypto/sha512"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"path"
 	"time"
+  "strings"
+
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+
+	"github.com/cryptogracy/goserver/configuration"
+)
+
+var (
+	ErrHash     = errors.New("Wrong Hash")
+	ErrInternal = errors.New("Internal Error")
+	ErrFileExist    = errors.New("File exists")
 )
 
 type File struct {
 	gorm.Model
-	Hash  string    `gorm:"primary_key;unique"`
-	Death time.Time `gorm:"not null"`
-	Short string
+	Hash   string    `gorm:"primary_key;unique"`
+	Death  time.Time `gorm:"not null"`
+	Short  string
+	Reader io.ReadCloser `gorm:"-"`
 }
 
-func AddFile(hash string, lifespan int) bool {
+// Lock before try to Upload
+func (file *File) AfterCreate() error {
+	// Open tmp file
+	tempfile := path.Join(configuration.Config.Tempdir, file.Hash)
+	out, err := os.OpenFile(tempfile, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
+	if err != nil {
+		return ErrInternal
+	}
+	defer out.Close()
+	defer os.Remove(tempfile) // We never want to keep the tmpfile
+
+	// Copy content to tmp
+	if _, err := io.Copy(out, file.Reader); err != nil {
+		return ErrInternal
+	}
+
+	// Check if the hash is correct
+	if _, err := out.Seek(0, os.SEEK_SET); err != nil {
+		return ErrInternal
+	}
+	if !isHash(file.Hash, out) {
+		return ErrHash
+	}
+
+	// Put into configuration Dir
+	if err := os.Rename(tempfile, path.Join(configuration.Config.Dir, file.Hash)); err != nil {
+		return ErrInternal
+	}
+
+	return nil
+}
+
+func AddFile(hash string, lifespan int, reader io.ReadCloser) (err error) {
+
 	death := time.Now().Add(time.Duration(lifespan) * time.Minute)
 	short := ""
 
-	file := File{Hash: hash, Death: death, Short: short}
-	db.Create(&file)
+	file := File{Hash: hash, Death: death, Short: short, Reader: reader}
+	err = db.Create(&file).Error
+  // This is not nice, but I have no idea how to make it better
+  if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+	  err = ErrFileExist
+  }
+  return
+}
 
-	if db.NewRecord(file) {
-		return false
+func isHash(hash string, file io.Reader) bool {
+	hasher := sha512.New()
+	_, err := io.Copy(hasher, file)
+	if err != nil {
+		panic(err)
 	}
-	return true
+	if fmt.Sprintf("%x", hasher.Sum(nil)) == hash {
+		return true
+	}
+	return false
 }

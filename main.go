@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cryptogracy/goserver/db"
 	"github.com/cryptogracy/goserver/configuration"
+	"github.com/cryptogracy/goserver/db"
 	"github.com/cryptogracy/goserver/routing"
 )
 

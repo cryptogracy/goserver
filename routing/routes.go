@@ -39,7 +39,7 @@ func Routes() []Route {
 			"UploadFiles",
 			"PUT",
 			"/api/files/{hash:[0-9|a-f]{128}}",
-      handler.Upload(),
+			handler.Upload(),
 		},
 	}
 }

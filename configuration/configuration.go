@@ -4,11 +4,9 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
-
-	"github.com/cryptogracy/goserver/filesystem"
+	"os"
 )
 
-var fs filesystem.Filesystem = filesystem.OsFS{}
 var Config configuration = configuration{address, static, dir, tempdir, database}
 
 const (
@@ -29,7 +27,7 @@ type configuration struct {
 }
 
 func Init() {
-	file, err := fs.Open(config_file)
+	file, err := os.Open(config_file)
 	if err != nil {
 		log.Println("Cannot open configuration file:", err)
 		return
