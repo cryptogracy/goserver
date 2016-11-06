@@ -1,44 +1,50 @@
 package configuration
 
 import (
-	"io"
-	"strings"
+	"io/ioutil"
+	"os"
 	"testing"
-
-	"github.com/cryptogracy/goserver/filesystem"
 )
 
-type fakeFileSystem struct {
-	content string
+func TestNotExist(t *testing.T) {
+	config_file = "file-should-not-exist"
+	if err := Init(); err != ErrIO {
+		t.Error(err)
+	}
 }
 
-func (ffs fakeFileSystem) Open(name string) (filesystem.File, error) {
-	reader := strings.NewReader(ffs.content)
-	return fakeFile{reader, nil, nil}, nil
-}
+func TestWrongYaml(t *testing.T) {
 
-type fakeFile struct {
-	reader io.Reader
-	io.Seeker
-	io.ReaderAt
-}
+	content := "Banana"
+	config_file = "test-config-file"
+	if err := ioutil.WriteFile(config_file, []byte(content), 0666); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove("test-config-file")
 
-func (ff fakeFile) Read(b []byte) (n int, err error) {
-	return ff.reader.Read(b)
-}
-
-func (ff fakeFile) Close() error {
-	return nil
+	if err := Init(); err != ErrYAML {
+		t.Error(err)
+	}
 }
 
 func TestInit(t *testing.T) {
-	fs = fakeFileSystem{`
+
+	content := `
 address: 1.2.3.4:1234
 static: static_test
 dir: dir_test
 tempdir: tempdir_test
-database: database_test`}
-	Init()
+database: database_test`
+	config_file = "test-config-file"
+	if err := ioutil.WriteFile(config_file, []byte(content), 0666); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove("test-config-file")
+
+	if err := Init(); err != nil {
+		t.Error(err)
+	}
+
 	if Config.Static != "static_test" {
 		t.Error("Address does not match")
 	}

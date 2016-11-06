@@ -1,22 +1,28 @@
 package configuration
 
 import (
+	"errors"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
-	"os"
 )
 
 var Config configuration = configuration{address, static, dir, tempdir, database}
 
-const (
-	config_file = "config"
-	address     = "127.0.0.1:8000"
-	static      = "ui"
-	dir         = "cache"
-	tempdir     = "tmp"
-	database    = "goserver.db"
+var (
+	ErrIO   = errors.New("Unable to read from configuration file")
+	ErrYAML = errors.New("Unable to parse configuration file")
 )
+
+const (
+	address  = "127.0.0.1:8000"
+	static   = "ui"
+	dir      = "cache"
+	tempdir  = "tmp"
+	database = "goserver.db"
+)
+
+var config_file = "config"
 
 type configuration struct {
 	Address  string `yaml:"address"`
@@ -26,21 +32,16 @@ type configuration struct {
 	Database string `yam:"database"`
 }
 
-func Init() {
-	file, err := os.Open(config_file)
+func Init() error {
+	content, err := ioutil.ReadFile(config_file)
 	if err != nil {
-		log.Println("Cannot open configuration file:", err)
-		return
-	}
-	defer file.Close()
-
-	content, err := ioutil.ReadAll(file)
-	if err != nil {
-		log.Println("Cannot open configuration file:", err)
-		return
+		log.Println(ErrIO)
+		return ErrIO
 	}
 	err = yaml.Unmarshal(content, &Config)
 	if err != nil {
-		panic(err)
+		log.Println(ErrYAML)
+		return ErrYAML
 	}
+	return nil
 }
