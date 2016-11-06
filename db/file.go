@@ -7,9 +7,8 @@ import (
 	"io"
 	"os"
 	"path"
+	"strings"
 	"time"
-  "strings"
-
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -18,9 +17,9 @@ import (
 )
 
 var (
-	ErrHash     = errors.New("Wrong Hash")
-	ErrInternal = errors.New("Internal Error")
-	ErrFileExist    = errors.New("File exists")
+	ErrHash      = errors.New("Wrong Hash")
+	ErrInternal  = errors.New("Internal Error")
+	ErrFileExist = errors.New("File exists")
 )
 
 type File struct {
@@ -70,11 +69,11 @@ func AddFile(hash string, lifespan int, reader io.ReadCloser) (err error) {
 
 	file := File{Hash: hash, Death: death, Short: short, Reader: reader}
 	err = db.Create(&file).Error
-  // This is not nice, but I have no idea how to make it better
-  if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-	  err = ErrFileExist
-  }
-  return
+	// This is not nice, but I have no idea how to make it better
+	if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+		err = ErrFileExist
+	}
+	return
 }
 
 func isHash(hash string, file io.Reader) bool {
