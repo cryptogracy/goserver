@@ -15,52 +15,89 @@ type testReader struct {
 	content string
 }
 
+const hash string = "1ae597b48b2e9befd48d39e7c98b14c0bd5b4320f5214a7773f5a3ef321571d318b6b2450d55372269a12549a38f6683d421212fd59adc8873711696cefe09f4"
+
 func TestAddFile(t *testing.T) {
-	// Create temporary directories
-	if dir, err := ioutil.TempDir("", ""); err == nil {
-		configuration.Config.Tempdir = path.Join(dir, "tmp")
-		configuration.Config.Dir = path.Join(dir, "cache")
-		defer os.RemoveAll(dir)
-	} else {
-		t.Fatal("Unable to create temporary directory", err)
-	}
-	if err := os.Mkdir(configuration.Config.Tempdir, 0777); err != nil {
-		t.Fatal("Unable to create temporary directory", err)
-	}
-	if err := os.Mkdir(configuration.Config.Dir, 0777); err != nil {
-		t.Fatal("Unable to create temporary directory", err)
-	}
+	defer os.RemoveAll(beforeAdd(t))
 
 	// Initialize in memory database
 	Init(":memory:")
 	defer db.Close()
 
-	reader := strings.NewReader("This is the content")
-	hash := "1ae597b48b2e9befd48d39e7c98b14c0bd5b4320f5214a7773f5a3ef321571d318b6b2450d55372269a12549a38f6683d421212fd59adc8873711696cefe09f4"
-
-	before := time.Now().Add(time.Duration(10) * time.Second)
-	if err := AddFile(hash, 10, reader); err != nil {
-		t.Error("Could not add", hash, err)
+	before := time.Now().UTC().Add(time.Duration(10 * time.Minute))
+	if err := AddFile(hash, 10, strings.NewReader("This is the content")); err != nil {
+		t.Error("Could not add file", err)
 	}
-
-	after := time.Now().Add(time.Duration(10) * time.Second)
+	after := time.Now().UTC().Add(time.Duration(10 * time.Minute))
 
 	var file File
-	if info := db.First(&file, &File{Hash: "hash"}); info.Error != nil {
-		t.Error("Unable to get", hash, info.Error)
+	if info := db.First(&file, &File{Hash: hash}); info.Error != nil {
+		t.Error("Unable to get file", info.Error)
 	}
 
 	if !(before.Before(file.Death) && after.After(file.Death)) {
-		t.Error("Wrong time")
+		t.Errorf(`Wrong time.
+  Before: '%v'
+  File:   '%v'
+  After:  '%v'`, before, file.Death, after)
 	}
 }
 
+func TestAddFileTwice(t *testing.T) {
+	defer os.RemoveAll(beforeAdd(t))
+
+	// Initialize in memory database
+	Init(":memory:")
+	defer db.Close()
+
+	if err := AddFile(hash, 10, strings.NewReader("This is the content")); err != nil {
+		t.Fatal("Unable to add", err)
+	}
+
+	if err := AddFile(hash, 10, strings.NewReader("This is the content")); err != ErrFileExist {
+		t.Error("Tried to Add same file twice, but wrong error", err)
+	}
+}
+
+func TestAddFileWrongHash(t *testing.T) {
+	defer os.RemoveAll(beforeAdd(t))
+
+	// Initialize in memory database
+	Init(":memory:")
+	defer db.Close()
+
+	if err := AddFile(hash, 10, strings.NewReader("This is the content")); err != nil {
+		t.Fatal("Unable to add", err)
+	}
+
+	if err := AddFile(hash, 10, strings.NewReader("This is the content")); err != ErrFileExist {
+		t.Error("Tried to Add same file twice, but wrong error", err)
+	}
+}
+
+func beforeAdd(t *testing.T) (resDir string) {
+	// Create temporary directories
+	if dir, err := ioutil.TempDir("", ""); err == nil {
+		resDir = dir
+	} else {
+		t.Error("Unable to create temporary directory", err)
+	}
+	configuration.Config.Tempdir = path.Join(resDir, "tmp")
+	if err := os.Mkdir(configuration.Config.Tempdir, 0777); err != nil {
+		t.Error("Unable to create temporary directory", err)
+	}
+	configuration.Config.Dir = path.Join(resDir, "cache")
+	if err := os.Mkdir(configuration.Config.Dir, 0777); err != nil {
+		t.Error("Unable to create temporary directory", err)
+	}
+	return
+}
+
 func TestIsHash(t *testing.T) {
-	hash := "e9b4a070e1be7dbec8b340ef80744d32f8d3cb9a9d1f89fed225037b9eaf0a271876adadc7485a6090aa2e8c0e30984c26710a501ce889cccb363d1cb28f087b"
-	if !isHash(hash, strings.NewReader("Das ist ein Test")) {
+	if !isHash(hash, strings.NewReader("This is the content")) {
 		t.Error("Correct hash, but isHash returns false")
 	}
-	if isHash(hash, strings.NewReader("Das ist noch ein Test")) {
+	if isHash(hash, strings.NewReader("This is the wrong content")) {
 		t.Error("Incorrect hash, but isHash returns true")
 	}
 }

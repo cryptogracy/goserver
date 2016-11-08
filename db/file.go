@@ -33,13 +33,13 @@ type File struct {
 
 func AddFile(hash string, lifespan int, reader io.Reader) (err error) {
 
-	death := time.Now().Add(time.Duration(lifespan) * time.Minute)
+	death := time.Now().UTC().Add(time.Duration(lifespan) * time.Minute)
 	short := ""
 
 	file := File{Hash: hash, Death: death, Short: short, Reader: reader}
 	err = db.Create(&file).Error
 	// This is not nice, but I have no idea how to make it better
-	if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+	if err != nil && strings.Contains(err.Error(), "UNIQUE constraint failed") {
 		err = ErrFileExist
 	}
 	return
@@ -84,7 +84,7 @@ func (file *File) AfterCreate() error {
 		return ErrInternal
 	}
 
-  return nil
+	return nil
 }
 
 func isHash(hash string, file io.Reader) bool {
