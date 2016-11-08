@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path"
 	"strings"
@@ -27,15 +28,38 @@ type File struct {
 	Hash   string    `gorm:"primary_key;unique"`
 	Death  time.Time `gorm:"not null"`
 	Short  string
-	Reader io.ReadCloser `gorm:"-"`
+	Reader io.Reader `gorm:"-"`
 }
 
-// Lock before try to Upload
+func AddFile(hash string, lifespan int, reader io.Reader) (err error) {
+
+	death := time.Now().Add(time.Duration(lifespan) * time.Minute)
+	short := ""
+
+	file := File{Hash: hash, Death: death, Short: short, Reader: reader}
+	err = db.Create(&file).Error
+	// This is not nice, but I have no idea how to make it better
+	if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+		err = ErrFileExist
+	}
+	return
+}
+
+func removeFiles() (int64, error) {
+	info := db.Delete(File{}, "death < ?", time.Now())
+	return info.RowsAffected, info.Error
+}
+
+func (file *File) AfterDelete() error {
+	return os.Remove(path.Join(configuration.Config.Dir, file.Hash))
+}
+
 func (file *File) AfterCreate() error {
 	// Open tmp file
 	tempfile := path.Join(configuration.Config.Tempdir, file.Hash)
 	out, err := os.OpenFile(tempfile, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
 	if err != nil {
+		log.Println("Unable to open tempfile", tempfile, err)
 		return ErrInternal
 	}
 	defer out.Close()
@@ -50,6 +74,7 @@ func (file *File) AfterCreate() error {
 	if _, err := out.Seek(0, os.SEEK_SET); err != nil {
 		return ErrInternal
 	}
+
 	if !isHash(file.Hash, out) {
 		return ErrHash
 	}
@@ -59,21 +84,7 @@ func (file *File) AfterCreate() error {
 		return ErrInternal
 	}
 
-	return nil
-}
-
-func AddFile(hash string, lifespan int, reader io.ReadCloser) (err error) {
-
-	death := time.Now().Add(time.Duration(lifespan) * time.Minute)
-	short := ""
-
-	file := File{Hash: hash, Death: death, Short: short, Reader: reader}
-	err = db.Create(&file).Error
-	// This is not nice, but I have no idea how to make it better
-	if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-		err = ErrFileExist
-	}
-	return
+  return nil
 }
 
 func isHash(hash string, file io.Reader) bool {

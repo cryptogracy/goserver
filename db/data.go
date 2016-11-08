@@ -1,6 +1,7 @@
 package db
 
 import (
+	"log"
 	"math/rand"
 	"time"
 
@@ -30,7 +31,9 @@ func Close() error {
 	return db.Close()
 }
 
-func Cleanup() (int64, error) {
-	info := db.Delete(File{}, "death < ?", time.Now())
-	return info.RowsAffected, info.Error
+func Cleanup() {
+	if affected, err := removeFiles(); err == nil {
+		log.Println("Remove %v old files\n", affected)
+		log.Println("Unable to delete old files", err)
+	}
 }
