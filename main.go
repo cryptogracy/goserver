@@ -26,13 +26,8 @@ func main() {
 	defer db.Close()
 
 	go func() {
-		for true {
-			affected, err := db.Cleanup()
-			if err == nil {
-				log.Printf("Deleted %v old Files\n", affected)
-			} else {
-				log.Println(err)
-			}
+		for {
+			db.Cleanup()
 			time.Sleep(1 * time.Minute)
 		}
 	}()

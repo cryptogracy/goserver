@@ -33,7 +33,8 @@ func Close() error {
 
 func Cleanup() {
 	if affected, err := removeFiles(); err == nil {
-		log.Println("Remove %v old files\n", affected)
-		log.Println("Unable to delete old files", err)
+		log.Printf("Remove %v old files\n", affected)
+	} else {
+		log.Printf("Unable to delete old files", err)
 	}
 }
