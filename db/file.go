@@ -46,7 +46,7 @@ func AddFile(hash string, lifespan int, reader io.Reader) (err error) {
 }
 
 func removeFiles() (int64, error) {
-	info := db.Delete(File{}, "death < ?", time.Now())
+	info := db.Delete(File{}, "death < ?", time.Now().UTC())
 	return info.RowsAffected, info.Error
 }
 
