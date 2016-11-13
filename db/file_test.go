@@ -75,6 +75,33 @@ func TestAddFileWrongHash(t *testing.T) {
 	}
 }
 
+func TestRemoveFiles(t *testing.T) {
+	defer os.RemoveAll(beforeAdd(t))
+
+	// Initialize in memory database
+	Init(":memory:")
+	defer db.Close()
+
+	fn := func(lifespan int, t *testing.T, del int64) {
+		if err := AddFile(hash, lifespan, strings.NewReader("This is the content")); err != nil {
+			t.Fatal("Unable to add", err)
+		}
+
+		if affected, err := removeFiles(); err != nil {
+			t.Error("Unable to remove:", err)
+		} else if affected != del {
+			t.Errorf("Wrong number of removed files. %v != %v", affected, del)
+		} else {
+			t.Log("asd")
+		}
+	}
+
+	fn(-5, t, 1)
+	fn(0, t, 1)
+	fn(5, t, 0)
+
+}
+
 func beforeAdd(t *testing.T) (resDir string) {
 	// Create temporary directories
 	if dir, err := ioutil.TempDir("", ""); err == nil {
