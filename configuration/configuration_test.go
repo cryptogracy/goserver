@@ -1,47 +1,27 @@
 package configuration
 
 import (
-	"io/ioutil"
-	"os"
+	"path/filepath"
 	"testing"
 )
 
 func TestNotExist(t *testing.T) {
-	config_file = "file-should-not-exist"
-	if err := Init(); err != ErrIO {
+	config := filepath.Join("testdata", "notexist")
+	if err := Init(config); err != ErrIO {
 		t.Error(err)
 	}
 }
 
 func TestWrongYaml(t *testing.T) {
-
-	content := "Banana"
-	config_file = "test-config-file"
-	if err := ioutil.WriteFile(config_file, []byte(content), 0666); err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove("test-config-file")
-
-	if err := Init(); err != ErrYAML {
+	config := filepath.Join("testdata", "wrongyaml")
+	if err := Init(config); err != ErrYAML {
 		t.Error(err)
 	}
 }
 
 func TestInit(t *testing.T) {
-
-	content := `
-address: 1.2.3.4:1234
-static: static_test
-dir: dir_test
-tempdir: tempdir_test
-database: database_test`
-	config_file = "test-config-file"
-	if err := ioutil.WriteFile(config_file, []byte(content), 0666); err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove("test-config-file")
-
-	if err := Init(); err != nil {
+	config := filepath.Join("testdata", "config")
+	if err := Init(config); err != nil {
 		t.Error(err)
 	}
 

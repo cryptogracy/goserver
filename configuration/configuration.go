@@ -16,13 +16,11 @@ var (
 
 const (
 	address  = "127.0.0.1:8000"
-	static   = "ui"
+	static   = "simple-frontend"
 	dir      = "cache"
 	tempdir  = "tmp"
 	database = "goserver.db"
 )
-
-var config_file = "config"
 
 type configuration struct {
 	Address  string `yaml:"address"`
@@ -32,7 +30,7 @@ type configuration struct {
 	Database string `yam:"database"`
 }
 
-func Init() error {
+func Init(config_file string) error {
 	content, err := ioutil.ReadFile(config_file)
 	if err != nil {
 		log.Println(ErrIO)

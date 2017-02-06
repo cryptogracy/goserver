@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/cryptogracy/goserver/configuration"
@@ -11,15 +12,13 @@ import (
 )
 
 func main() {
-
-	configuration.Init()
+	configuration.Init(os.Args[1])
 	log.Println("Using database", configuration.Config.Database)
 	log.Println("Static from", configuration.Config.Static)
 	log.Println("Serving files from", configuration.Config.Dir)
 	log.Println("Listening on http://" + configuration.Config.Address)
 
-	var err error
-	if err = db.Init(configuration.Config.Database); err != nil {
+	if err := db.Init(configuration.Config.Database); err != nil {
 		log.Println(err)
 		panic(err)
 	}
