@@ -7,15 +7,15 @@ import (
 
 func TestNotExist(t *testing.T) {
 	config := filepath.Join("testdata", "notexist")
-	if err := Init(config); err != ErrIO {
-		t.Error(err)
+	if err := Init(config); err == nil {
+		t.Error("config file does not exists, but no error")
 	}
 }
 
 func TestWrongYaml(t *testing.T) {
 	config := filepath.Join("testdata", "wrongyaml")
-	if err := Init(config); err != ErrYAML {
-		t.Error(err)
+	if err := Init(config); err == nil {
+		t.Error("config file no valid yaml, but no error")
 	}
 }
 

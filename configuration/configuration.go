@@ -1,18 +1,12 @@
 package configuration
 
 import (
-	"errors"
+	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"log"
 )
 
 var Config configuration = configuration{address, static, dir, tempdir, database}
-
-var (
-	ErrIO   = errors.New("Unable to read from configuration file")
-	ErrYAML = errors.New("Unable to parse configuration file")
-)
 
 const (
 	address  = "127.0.0.1:8000"
@@ -33,13 +27,11 @@ type configuration struct {
 func Init(config_file string) error {
 	content, err := ioutil.ReadFile(config_file)
 	if err != nil {
-		log.Println(ErrIO)
-		return ErrIO
+		return fmt.Errorf("Unable to read configuration file, %v", err)
 	}
 	err = yaml.Unmarshal(content, &Config)
 	if err != nil {
-		log.Println(ErrYAML)
-		return ErrYAML
+		return fmt.Errorf("Unable to parse configuration file, %v", err)
 	}
 	return nil
 }
